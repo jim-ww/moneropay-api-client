@@ -12,6 +12,9 @@ import (
 	"gitlab.com/moneropay/moneropay/v2/pkg/model"
 )
 
+// ensure that MoneroPayAPIClient implements MoneroPayAPI
+var _ MoneroPayAPI = (*MoneroPayAPIClient)(nil)
+
 type Config struct {
 	Endpoint string `json:"endpoint" yaml:"endpoint" toml:"endpoint" env:"MONERO_PAY_ENDPOINT"`
 }
@@ -29,7 +32,7 @@ func WithCustomHTTPClient(client *http.Client) Option {
 	}
 }
 
-func NewMoneroPayAPIClient(cfg Config, opts ...Option) MoneroPayAPI {
+func NewMoneroPayAPIClient(cfg Config, opts ...Option) *MoneroPayAPIClient {
 	mpa := &MoneroPayAPIClient{cfg: cfg, client: http.DefaultClient}
 
 	for _, opt := range opts {
