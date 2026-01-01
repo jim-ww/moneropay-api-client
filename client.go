@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -94,7 +95,7 @@ func (c *MoneroPayAPIClient) doRequest(ctx context.Context, method, path string,
 	return resp, nil
 }
 
-// Helper function to parse response
+// Helper function to parse response for all endpoints except health
 func (c *MoneroPayAPIClient) parseResponse(resp *http.Response, result interface{}) error {
 	defer resp.Body.Close()
 
@@ -104,15 +105,38 @@ func (c *MoneroPayAPIClient) parseResponse(resp *http.Response, result interface
 			Status  int    `json:"status"`
 			Message string `json:"message,omitempty"`
 		}
-		if err := json.NewDecoder(resp.Body).Decode(&apiErr); err == nil && apiErr.Message != "" {
+
+		// Read the body first
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("HTTP %d: %s (failed to read body: %w)", resp.StatusCode, http.StatusText(resp.StatusCode), err)
+		}
+
+		// Try to parse as JSON
+		if err := json.Unmarshal(bodyBytes, &apiErr); err == nil && apiErr.Message != "" {
 			return fmt.Errorf("API error %d: %s", apiErr.Status, apiErr.Message)
 		}
+
+		// If not JSON or no message, return generic error
 		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 
 	if result != nil {
 		if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
 			return fmt.Errorf("failed to decode response: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// Helper function specifically for health endpoint
+func (c *MoneroPayAPIClient) parseHealthResponse(resp *http.Response, result interface{}) error {
+	defer resp.Body.Close()
+
+	if result != nil {
+		if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
+			return fmt.Errorf("failed to decode health response: %w", err)
 		}
 	}
 
@@ -127,7 +151,7 @@ func (c *MoneroPayAPIClient) Health(ctx context.Context) (*model.HealthResponse,
 	}
 
 	var healthResp model.HealthResponse
-	if err := c.parseResponse(resp, &healthResp); err != nil {
+	if err := c.parseHealthResponse(resp, &healthResp); err != nil {
 		return nil, err
 	}
 

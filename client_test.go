@@ -56,8 +56,6 @@ func TestHealth(t *testing.T) {
 	assert.True(t, resp.Services.PostgreSQL)
 }
 
-// TODO
-/*
 func TestHealth_ServiceUnavailable(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		response := map[string]interface{}{
@@ -85,7 +83,6 @@ func TestHealth_ServiceUnavailable(t *testing.T) {
 	assert.False(t, resp.Services.WalletRPC)
 	assert.True(t, resp.Services.PostgreSQL)
 }
-*/
 
 func TestReceive(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
