@@ -18,7 +18,7 @@ type MoneroPayAPI interface {
 	ReceivedPerAddress(ctx context.Context, address string, minHeight, maxHeight *int) (*model.ReceiveGetResponse, error)
 	// Transfer to a single or multiple recipients. If necessary, split the transfer into multiple transactions.
 	// NOTE: This transaction uses balance of the wallet's Primary Account.
-	Transfer(context.Context) (*model.TransferPostResponse, error)
+	Transfer(context.Context, model.TransferPostRequest) (*model.TransferPostResponse, error)
 	// Get information about transaction via its hash.
 	TransferInfo(ctx context.Context, txHash string) (*model.TransferGetResponse, error)
 }
